@@ -3,49 +3,91 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لعبة المافيا</title>
+<title>🎭 لعبة المافيا العربية</title>
 
 <style>
+
 body{
-    font-family: Arial, sans-serif;
-    background:#111827;
+    margin:0;
+    font-family:Tahoma,sans-serif;
+    background:linear-gradient(135deg,#0f172a,#111827,#1e293b);
     color:white;
     text-align:center;
+    min-height:100vh;
     padding:20px;
 }
 
 .container{
-    max-width:600px;
+    max-width:650px;
     margin:auto;
-    background:#1f2937;
-    padding:20px;
-    border-radius:15px;
+    background:rgba(31,41,55,.95);
+    padding:25px;
+    border-radius:20px;
+    box-shadow:0 0 30px rgba(0,0,0,.5);
 }
 
-input, button{
+h1{
+    color:#ef4444;
+}
+
+input{
     padding:10px;
-    margin:5px;
     border:none;
-    border-radius:8px;
+    border-radius:10px;
+    text-align:center;
+    font-size:16px;
 }
 
 button{
+    padding:12px 18px;
+    margin:8px;
+    border:none;
+    border-radius:10px;
     cursor:pointer;
-    background:#2563eb;
+    background:#dc2626;
     color:white;
+    font-weight:bold;
+    font-size:16px;
+    transition:.3s;
+}
+
+button:hover{
+    transform:scale(1.05);
+    background:#ef4444;
 }
 
 .role-card{
     margin-top:20px;
-    padding:20px;
-    background:#374151;
-    border-radius:12px;
-    font-size:28px;
+    padding:30px;
+    background:#7f1d1d;
+    border:2px solid #ef4444;
+    border-radius:15px;
+    font-size:32px;
+    font-weight:bold;
+    animation:glow 1s infinite alternate;
 }
 
 .hidden{
     display:none;
 }
+
+.options{
+    margin:15px 0;
+}
+
+.options label{
+    margin:0 10px;
+}
+
+#playerTurn{
+    color:#fbbf24;
+}
+
+@keyframes glow{
+    from{box-shadow:0 0 10px #ef4444;}
+    to{box-shadow:0 0 25px #ef4444;}
+}
+
 </style>
 </head>
 
@@ -53,63 +95,43 @@ button{
 
 <div class="container">
 
-<h1>🎭 توزيع أدوار المافيا</h1>
+<h1>🎭 لعبة المافيا العربية 🔪</h1>
 
-<label>عدد اللاعبين:</label>
+<label>عدد اللاعبين:</label><br><br>
 <input type="number" id="players" min="4" value="6">
 
-<br>
+<div class="options">
+<label><input type="checkbox" id="sheikh" checked> 🕌 شيخ</label>
+<label><input type="checkbox" id="girl" checked> 👧 بنت</label>
+<label><input type="checkbox" id="boy" checked> 👦 ولد</label>
+</div>
 
-<label>
-<input type="checkbox" id="sheikh" checked>
-شيخ
-</label>
-
-<label>
-<input type="checkbox" id="girl" checked>
-بنت
-</label>
-
-<label>
-<input type="checkbox" id="boy" checked>
-ولد
-</label>
-
-<br><br>
-
-<label>عدد المافيا:</label>
+<label>عدد المافيا:</label><br><br>
 <input type="number" id="mafiaCount" min="1" value="1">
 
 <br><br>
 
-<button onclick="generateRoles()">
-توزيع الأدوار
-</button>
+<button onclick="generateRoles()">🎲 توزيع الأدوار</button>
 
 <div id="gameArea" class="hidden">
 
 <h2 id="playerTurn"></h2>
 
-<button onclick="showRole()">
-كشف دوري
-</button>
+<button onclick="showRole()">👁️ كشف الدور</button>
 
 <div id="roleCard" class="role-card hidden"></div>
 
 <br>
 
-<button onclick="nextPlayer()">
-اللاعب التالي
-</button>
+<button onclick="nextPlayer()">➡️ اللاعب التالي</button>
 
 </div>
 
-</div>
-
-<script>
+</div><script>
 
 let roles = [];
 let currentPlayer = 0;
+let roleViewed = false;
 
 function shuffle(array){
     for(let i=array.length-1;i>0;i--){
@@ -123,24 +145,29 @@ function generateRoles(){
     let players = parseInt(document.getElementById("players").value);
     let mafiaCount = parseInt(document.getElementById("mafiaCount").value);
 
+    if(players < 4){
+        alert("الحد الأدنى 4 لاعبين");
+        return;
+    }
+
+    if(mafiaCount >= players/2){
+        alert("عدد المافيا كبير جداً");
+        return;
+    }
+
     let rolesList = [];
 
     if(document.getElementById("sheikh").checked)
         rolesList.push("🕌 الشيخ");
 
     if(document.getElementById("girl").checked)
-        rolesList.push("👧 البنت");
+        rolesList.push("👧 بنت");
 
     if(document.getElementById("boy").checked)
-        rolesList.push("👦 الولد");
+        rolesList.push("👦 ولد");
 
     for(let i=0;i<mafiaCount;i++){
         rolesList.push("🔪 مافيا");
-    }
-
-    if(rolesList.length > players){
-        alert("عدد الأدوار الخاصة أكبر من عدد اللاعبين!");
-        return;
     }
 
     while(rolesList.length < players){
@@ -151,10 +178,12 @@ function generateRoles(){
 
     roles = rolesList;
     currentPlayer = 0;
+    roleViewed = false;
 
     document.getElementById("gameArea").classList.remove("hidden");
+
     document.getElementById("playerTurn").innerText =
-        "اللاعب رقم 1";
+        "👤 اللاعب رقم 1 من " + players;
 
     document.getElementById("roleCard").classList.add("hidden");
 }
@@ -165,25 +194,36 @@ function showRole(){
 
     card.innerText = roles[currentPlayer];
     card.classList.remove("hidden");
+
+    roleViewed = true;
 }
 
 function nextPlayer(){
+
+    if(!roleViewed){
+        alert("⚠️ لازم تكشف الدور أولاً");
+        return;
+    }
+
+    roleViewed = false;
 
     currentPlayer++;
 
     if(currentPlayer >= roles.length){
 
         document.getElementById("playerTurn").innerText =
-            "✅ انتهى توزيع الأدوار";
+            "🎉 انتهت اللعبة";
 
         document.getElementById("roleCard").innerText =
-            "ابدأوا اللعبة";
+            "ابدأوا اللعب";
+
+        document.getElementById("roleCard").classList.remove("hidden");
 
         return;
     }
 
     document.getElementById("playerTurn").innerText =
-        "اللاعب رقم " + (currentPlayer+1);
+        "👤 اللاعب رقم " + (currentPlayer+1) + " من " + roles.length;
 
     document.getElementById("roleCard").classList.add("hidden");
 }
