@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🎭 لعبة المافيا العربية</title>
+<title>🎭 لعبة المافيا</title>
 
 <style>
 
@@ -18,12 +18,11 @@ body{
 }
 
 .container{
-    max-width:650px;
+    max-width:750px;
     margin:auto;
     background:rgba(31,41,55,.95);
     padding:25px;
     border-radius:20px;
-    box-shadow:0 0 30px rgba(0,0,0,.5);
 }
 
 h1{
@@ -32,10 +31,10 @@ h1{
 
 input{
     padding:10px;
+    margin:5px;
     border:none;
     border-radius:10px;
     text-align:center;
-    font-size:16px;
 }
 
 button{
@@ -47,8 +46,7 @@ button{
     background:#dc2626;
     color:white;
     font-weight:bold;
-    font-size:16px;
-    transition:.3s;
+    transition:.2s;
 }
 
 button:hover{
@@ -58,34 +56,39 @@ button:hover{
 
 .role-card{
     margin-top:20px;
-    padding:30px;
+    padding:25px;
     background:#7f1d1d;
-    border:2px solid #ef4444;
     border-radius:15px;
-    font-size:32px;
+    font-size:28px;
     font-weight:bold;
-    animation:glow 1s infinite alternate;
+    border:2px solid #ef4444;
 }
 
 .hidden{
     display:none;
 }
 
-.options{
-    margin:15px 0;
-}
-
-.options label{
-    margin:0 10px;
-}
-
 #playerTurn{
     color:#fbbf24;
 }
 
-@keyframes glow{
-    from{box-shadow:0 0 10px #ef4444;}
-    to{box-shadow:0 0 25px #ef4444;}
+.eliminated{
+    margin-top:10px;
+    padding:10px;
+    background:#111827;
+    border:1px solid #ef4444;
+    border-radius:10px;
+}
+
+.top-bar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+}
+
+.reset-btn{
+    background:#374151;
 }
 
 </style>
@@ -95,25 +98,47 @@ button:hover{
 
 <div class="container">
 
-<h1>🎭 لعبة المافيا العربية 🔪</h1>
-
-<label>عدد اللاعبين:</label><br><br>
-<input type="number" id="players" min="4" value="6">
-
-<div class="options">
-<label><input type="checkbox" id="sheikh" checked> 🕌 شيخ</label>
-<label><input type="checkbox" id="girl" checked> 👧 بنت</label>
-<label><input type="checkbox" id="boy" checked> 👦 ولد</label>
+<!-- 🔁 زر الأعلى -->
+<div class="top-bar">
+<h3>🎭 Mafia Game</h3>
+<button class="reset-btn" onclick="resetGame()">🔁 إعادة اللعبة</button>
 </div>
 
-<label>عدد المافيا:</label><br><br>
+<!-- ===== الإعداد ===== -->
+<div id="setupPage">
+
+<label>عدد اللاعبين:</label><br>
+<input type="number" id="players" min="4" value="6">
+
+<br>
+
+<div>
+<label><input type="checkbox" id="sheikh" checked> شيخ</label>
+<label><input type="checkbox" id="girl" checked> بنت</label>
+<label><input type="checkbox" id="boy" checked> ولد</label>
+</div>
+
+<br>
+
+<label>عدد المافيا:</label><br>
 <input type="number" id="mafiaCount" min="1" value="1">
 
 <br><br>
 
-<button onclick="generateRoles()">🎲 توزيع الأدوار</button>
+<button onclick="createNameInputs()">➡️ إدخال الأسماء</button>
 
-<div id="gameArea" class="hidden">
+<div id="nameInputs"></div>
+
+<br>
+
+<button onclick="startGame()">🎲 توزيع الأدوار</button>
+
+</div>
+
+<!-- ===== اللعب ===== -->
+<div id="gamePage" class="hidden">
+
+<h1>🎭 الأدوار</h1>
 
 <h2 id="playerTurn"></h2>
 
@@ -127,14 +152,102 @@ button:hover{
 
 </div>
 
+<!-- ===== الإقصاء ===== -->
+<div id="summaryPage" class="hidden">
+
+<h1>🗳️ الإقصاء</h1>
+
+<div id="summaryList"></div>
+
+<h2>❌ سجل الإقصاء</h2>
+<div id="eliminationLog"></div>
+
+</div>
+
 </div>
 
 <script>
 
 let roles = [];
+let names = [];
 let currentPlayer = 0;
 let roleViewed = false;
 
+/* ===== حفظ ===== */
+function saveGame(){
+    localStorage.setItem("mafiaGame", JSON.stringify({
+        roles,
+        names,
+        currentPlayer
+    }));
+}
+
+/* ===== تحميل ===== */
+window.onload = function(){
+
+    let saved = localStorage.getItem("mafiaGame");
+
+    if(saved){
+
+        let data = JSON.parse(saved);
+
+        if(!data.roles || data.roles.length === 0) return;
+
+        roles = data.roles;
+        names = data.names;
+        currentPlayer = data.currentPlayer;
+
+        document.getElementById("setupPage").classList.add("hidden");
+        document.getElementById("gamePage").classList.remove("hidden");
+
+        document.getElementById("playerTurn").innerText =
+            "👤 الدور: " + (names[currentPlayer] || "لاعب");
+    }
+};
+
+/* ===== 🔥 RESET FIXED ===== */
+function resetGame(){
+
+    let ok = confirm("⚠️ هل أنت متأكد أنك تريد إعادة اللعبة؟");
+
+    if(!ok) return;
+
+    localStorage.removeItem("mafiaGame");
+
+    roles = [];
+    names = [];
+    currentPlayer = 0;
+    roleViewed = false;
+
+    document.getElementById("setupPage").classList.remove("hidden");
+    document.getElementById("gamePage").classList.add("hidden");
+    document.getElementById("summaryPage").classList.add("hidden");
+
+    document.getElementById("nameInputs").innerHTML = "";
+    document.getElementById("eliminationLog").innerHTML = "";
+    document.getElementById("summaryList").innerHTML = "";
+
+    document.getElementById("players").value = 6;
+    document.getElementById("mafiaCount").value = 1;
+
+    alert("✅ تم إعادة اللعبة");
+}
+
+/* ===== إدخال أسماء ===== */
+function createNameInputs(){
+
+    let count = document.getElementById("players").value;
+
+    let html = "<h3>✏️ أدخل أسماء اللاعبين</h3>";
+
+    for(let i=0;i<count;i++){
+        html += `<input type="text" id="name${i}" placeholder="اسم اللاعب ${i+1}"><br>`;
+    }
+
+    document.getElementById("nameInputs").innerHTML = html;
+}
+
+/* ===== خلط ===== */
 function shuffle(array){
     for(let i=array.length-1;i>0;i--){
         const j=Math.floor(Math.random()*(i+1));
@@ -142,31 +255,30 @@ function shuffle(array){
     }
 }
 
-function generateRoles(){
+/* ===== بدء اللعبة ===== */
+function startGame(){
 
     let players = parseInt(document.getElementById("players").value);
     let mafiaCount = parseInt(document.getElementById("mafiaCount").value);
 
-    if(players < 4){
-        alert("الحد الأدنى 4 لاعبين");
-        return;
-    }
+    names = [];
 
-    if(mafiaCount >= players/2){
-        alert("عدد المافيا كبير جداً");
-        return;
+    for(let i=0;i<players;i++){
+
+        let input = document.getElementById("name"+i);
+
+        let nameValue = input && input.value.trim() !== ""
+            ? input.value.trim()
+            : "لاعب " + (i+1);
+
+        names.push(nameValue);
     }
 
     let rolesList = [];
 
-    if(document.getElementById("sheikh").checked)
-        rolesList.push("🕌 شيخ");
-
-    if(document.getElementById("girl").checked)
-        rolesList.push("👧 بنت");
-
-    if(document.getElementById("boy").checked)
-        rolesList.push("👦 ولد");
+    if(document.getElementById("sheikh").checked) rolesList.push("🕌 شيخ");
+    if(document.getElementById("girl").checked) rolesList.push("👧 بنت");
+    if(document.getElementById("boy").checked) rolesList.push("👦 ولد");
 
     for(let i=0;i<mafiaCount;i++){
         rolesList.push("🔪 مافيا");
@@ -178,28 +290,35 @@ function generateRoles(){
 
     shuffle(rolesList);
 
-    roles = rolesList;
+    roles = rolesList.map(r => ({
+        role: r,
+        alive: true
+    }));
+
     currentPlayer = 0;
     roleViewed = false;
 
-    document.getElementById("gameArea").classList.remove("hidden");
+    document.getElementById("setupPage").classList.add("hidden");
+    document.getElementById("gamePage").classList.remove("hidden");
 
     document.getElementById("playerTurn").innerText =
-        "👤 اللاعب رقم 1 من " + players;
+        "👤 الدور: " + names[0];
 
-    document.getElementById("roleCard").classList.add("hidden");
+    saveGame();
 }
 
+/* ===== كشف الدور ===== */
 function showRole(){
 
-    let card = document.getElementById("roleCard");
+    document.getElementById("roleCard").innerText =
+        roles[currentPlayer].role;
 
-    card.innerText = roles[currentPlayer];
-    card.classList.remove("hidden");
+    document.getElementById("roleCard").classList.remove("hidden");
 
     roleViewed = true;
 }
 
+/* ===== التالي ===== */
 function nextPlayer(){
 
     if(!roleViewed){
@@ -211,22 +330,61 @@ function nextPlayer(){
     currentPlayer++;
 
     if(currentPlayer >= roles.length){
-
-        document.getElementById("playerTurn").innerText =
-            "🎉 انتهت اللعبة";
-
-        document.getElementById("roleCard").innerText =
-            "ابدأوا اللعب";
-
-        document.getElementById("roleCard").classList.remove("hidden");
-
+        showSummary();
         return;
     }
 
     document.getElementById("playerTurn").innerText =
-        "👤 اللاعب رقم " + (currentPlayer+1) + " من " + roles.length;
+        "👤 الدور: " + names[currentPlayer];
 
     document.getElementById("roleCard").classList.add("hidden");
+
+    saveGame();
+}
+
+/* ===== الإقصاء ===== */
+function showSummary(){
+
+    document.getElementById("gamePage").classList.add("hidden");
+    document.getElementById("summaryPage").classList.remove("hidden");
+
+    render();
+}
+
+function render(){
+
+    let html = "";
+
+    for(let i=0;i<roles.length;i++){
+
+        if(!roles[i].alive) continue;
+
+        html += `
+            <button onclick="eliminate(${i})">
+                👤 ${names[i]}
+            </button>
+        `;
+    }
+
+    document.getElementById("summaryList").innerHTML = html;
+}
+
+/* ===== حذف لاعب ===== */
+function eliminate(i){
+
+    roles[i].alive = false;
+
+    render();
+
+    let log = document.getElementById("eliminationLog");
+
+    let div = document.createElement("div");
+    div.className = "eliminated";
+    div.innerText = "❌ تم إقصاء: " + names[i] + " (" + roles[i].role + ")";
+
+    log.appendChild(div);
+
+    saveGame();
 }
 
 </script>
